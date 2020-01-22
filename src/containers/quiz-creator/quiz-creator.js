@@ -5,6 +5,7 @@ import {createControl, validate, validateForm} from '../../form/form-framework';
 import Input from '../../components/ui/input/input';
 import Auxiliary from '../../hoc/auxiliary/auxiliary';
 import Select from '../../components/ui/select/select';
+import axios from '../../axios/axios-quiz';
 
 function createOptionControl (number) {
   return createControl({
@@ -42,10 +43,49 @@ export default class QuizCreator extends Component {
 
   addQuestionHandler = (evt) => {
     evt.preventDefault()
+
+    const quiz = this.state.quiz.concat()
+    const index = quiz.length + 1
+
+    const {question, option1, option2, option3, option4} = this.state.formControls
+
+    const questionItem = {
+      question: question.value,
+      id: index,
+      rightAnswerId: this.state.rightAnswerId,
+      answers: [
+        {text: option1.value, id: option1.id},
+        {text: option2.value, id: option2.id},
+        {text: option3.value, id: option3.id},
+        {text: option4.value, id: option4.id},
+      ]
+    }
+    quiz.push(questionItem)
+
+    this.setState({
+      quiz,
+      isFormValid: false,
+      formControls: createFormControls(),
+      rightAnswerId: 1
+    })
   }
 
-  createQuizhandler = () => {
+  createQuizhandler = async (evt) => {
+    evt.preventDefault()
 
+    try {
+      await axios.post('/quizes.json', this.state.quiz)
+      
+      this.setState({
+        quiz: [],
+        isFormValid: false,
+        formControls: createFormControls(),
+        rightAnswerId: 1
+      })
+
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   changeHandler = (value, controlName) => {
@@ -66,7 +106,7 @@ export default class QuizCreator extends Component {
 
   selectChangeHandler = (evt) => {
     this.setState({
-      rightAnswerId: +evt.target.value
+      rightAnswerId: + evt.target.value
     })
   }
 
@@ -128,7 +168,7 @@ export default class QuizCreator extends Component {
             <Button
               type="success"
               onClick={this.createQuizhandler}
-              disabled={this.state.quiz === 0}
+              disabled={this.state.quiz.length === 0}
             >
               Создать тест
             </Button>
